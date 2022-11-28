@@ -214,7 +214,6 @@ namespace quizserver
             client newComer = clientList[clientList.Count() - 1];
 
             bool connected = true;
-            int appended = 0, gameRound = 0;
             //send message to inform game starts
             if (playerList.Count == 2)
             {
@@ -253,13 +252,9 @@ namespace quizserver
                             Byte[] qBuffer = new Byte[64];
                             qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
                             newClient.client_socket.Send(qBuffer);
-                            lock (locked)
+                            if (newClient.client_name == playerList[0].name)
                             {
-                                if (appended == gameRound)
-                                {
-                                    control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
-                                    Interlocked.Increment(ref appended);
-                                }
+                                control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
                             }
                             Byte[] aBuffer = new Byte[64];
                             newClient.client_socket.Receive(aBuffer);
@@ -288,7 +283,10 @@ namespace quizserver
                                     var temp = playerList[0];
                                     temp.score = newScore;
                                     playerList[0] = temp;
-                                    control_panel.AppendText("Server: Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    if (newClient.client_name == playerList[0].name)
+                                    {
+                                        control_panel.AppendText("Server: Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    }
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
@@ -302,7 +300,10 @@ namespace quizserver
                                     var temp = playerList[1];
                                     temp.score = newScore;
                                     playerList[1] = temp;
-                                    control_panel.AppendText("Server: Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    if (newClient.client_name == playerList[0].name)
+                                    {
+                                        control_panel.AppendText("Server: Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    }
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
@@ -311,9 +312,11 @@ namespace quizserver
                                 }
 
                                 // Score table to see the results in general
-                                scoreTable();
+                                if (newClient.client_name == playerList[0].name)
+                                {
+                                    scoreTable();
+                                }
                             }
-                            Interlocked.Decrement(ref appended);
                             barrier.SignalAndWait();
 
                         }
