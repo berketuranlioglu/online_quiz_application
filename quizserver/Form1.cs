@@ -214,6 +214,7 @@ namespace quizserver
             client newComer = clientList[clientList.Count() - 1];
 
             bool connected = true;
+            int appended = 0, gameRound = 0;
             //send message to inform game starts
             if (playerList.Count == 2)
             {
@@ -249,29 +250,29 @@ namespace quizserver
                         for (int i = 0; i < noquestion; i++)
                         {
                             int answeredNum = 0;
+                            Byte[] qBuffer = new Byte[64];
+                            qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
+                            newClient.client_socket.Send(qBuffer);
                             lock (locked)
                             {
-                                Byte[] qBuffer = new Byte[64];
-                                qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
-                                newClient.client_socket.Send(qBuffer);
-                                if (control_panel.Find(questions[i]) != null)
+                                if (appended == gameRound)
                                 {
                                     control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
+                                    Interlocked.Increment(ref appended);
                                 }
+                            }
+                            Byte[] aBuffer = new Byte[64];
+                            newClient.client_socket.Receive(aBuffer);
+                            String incomingAnswer = Encoding.Default.GetString(aBuffer);
+                            incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
+                            double playerAnswer = Convert.ToDouble(incomingAnswer);
 
-                                Byte[] aBuffer = new Byte[64];
-                                newClient.client_socket.Receive(aBuffer);
-                                String incomingAnswer = Encoding.Default.GetString(aBuffer);
-                                incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
-                                double playerAnswer = Convert.ToDouble(incomingAnswer);
-
-                                foreach (player plyr in playerList)
+                            foreach (player plyr in playerList)
+                            {
+                                if (newClient.client_name == plyr.name)
                                 {
-                                    if (newClient.client_name == plyr.name)
-                                    {
-                                        plyr.answers.Add(playerAnswer);
-                                        answeredNum++;
-                                    }
+                                    plyr.answers.Add(playerAnswer);
+                                    answeredNum++;
                                 }
                             }
                             barrier.SignalAndWait();
@@ -308,7 +309,11 @@ namespace quizserver
                                     winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
+
+                                // Score table to see the results in general
+                                scoreTable();
                             }
+                            Interlocked.Decrement(ref appended);
                             barrier.SignalAndWait();
 
                         }
@@ -331,6 +336,24 @@ namespace quizserver
             }
         }
 
+        private void scoreTable()
+        {
+            control_panel.AppendText("-------------------------\n");
+            control_panel.AppendText("SCORE TABLE:\n");
+
+            if (playerList[0].score > playerList[1].score)
+            {
+                control_panel.AppendText("1. " + playerList[0].name + ": " + playerList[0].score + " points\n");
+                control_panel.AppendText("2. " + playerList[1].name + ": " + playerList[1].score + " points\n");
+            }
+            else if (playerList[1].score > playerList[0].score)
+            {
+                control_panel.AppendText("1. " + playerList[1].name + ": " + playerList[1].score + " points\n");
+                control_panel.AppendText("2. " + playerList[0].name + ": " + playerList[0].score + " points\n");
+            }
+            control_panel.AppendText("-------------------------\n");
+        }
+
         private void checkWinner()
         {
 
@@ -340,8 +363,6 @@ namespace quizserver
         {
 
         }
-
-
 
         //if exit button is clicked
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
