@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\quizserver\\quizserver.csproj": {}
+    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\quizserver\\quizserver.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\quizserver\\quizserver.csproj": {
+    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\quizserver\\quizserver.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\quizserver\\quizserver.csproj",
+        "projectUniqueName": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\quizserver\\quizserver.csproj",
         "projectName": "quizserver",
-        "projectPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\quizserver\\quizserver.csproj",
+        "projectPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\quizserver\\quizserver.csproj",
         "packagesPath": "C:\\Users\\hamdi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\quizserver\\obj\\",
+        "outputPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\quizserver\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hamdi\\AppData\\Roaming\\NuGet\\NuGet.Config",

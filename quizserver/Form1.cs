@@ -19,6 +19,7 @@ namespace quizserver
 {
     public partial class Form1 : Form
     {
+        public static readonly object locked = new object();
 
 
         Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -33,6 +34,8 @@ namespace quizserver
         int noquestion;
         bool gameFinished = false;
 
+        static Barrier barrier = new Barrier(2, x => Console.WriteLine("Both threads have come to the end.\n"));
+
 
         struct client
         {
@@ -45,7 +48,7 @@ namespace quizserver
         {
             public String name;
             public List<double> answers;
-            public double score;
+            public int score;
 
         }
 
@@ -217,7 +220,7 @@ namespace quizserver
                 Byte[] gameStart = new Byte[64];
                 gameStart = Encoding.Default.GetBytes("SERVER: Welcome to the game. We are starting...\n");
                 control_panel.AppendText("SERVER: Welcome to the game. We are starting...\n");
-                
+
             }
 
             while (connected)
@@ -235,73 +238,62 @@ namespace quizserver
 
                     if (playerList.Count == 2)
                     {
-                        Byte[] gameStart = new Byte[64];
-                        gameStart = Encoding.Default.GetBytes("SERVER: Welcome to the game. We are starting...\n");
-                        newClient.client_socket.Send(gameStart);
+                        lock (locked)
+                        {
+                            Byte[] gameStart = new Byte[64];
+                            gameStart = Encoding.Default.GetBytes("Server: Welcome to the game. We are starting...\n");
+                            newClient.client_socket.Send(gameStart);
+                        }
 
                         //while # of questions are finished
                         for (int i = 0; i < noquestion; i++)
                         {
                             int answeredNum = 0;
-                            Byte[] qBuffer = new Byte[64];
-                            qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
-                            newClient.client_socket.Send(qBuffer);
-                            if (control_panel.Find(questions[i]) != null)
+                            lock (locked)
                             {
-                                control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
-                            }
-
-                            Byte[] aBuffer = new Byte[64];
-                            newClient.client_socket.Receive(aBuffer);
-                            String incomingAnswer = Encoding.Default.GetString(aBuffer);
-                            incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
-                            double playerAnswer = Convert.ToDouble(incomingAnswer);
-
-                            foreach (player plyr in playerList)
-                            {
-                                if (newClient.client_name == plyr.name)
+                                Byte[] qBuffer = new Byte[64];
+                                qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
+                                newClient.client_socket.Send(qBuffer);
+                                if (control_panel.Find(questions[i]) != null)
                                 {
-                                    plyr.answers.Add(playerAnswer);
-                                    answeredNum++;
+                                    control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
+                                }
+
+                                Byte[] aBuffer = new Byte[64];
+                                newClient.client_socket.Receive(aBuffer);
+                                String incomingAnswer = Encoding.Default.GetString(aBuffer);
+                                incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
+                                double playerAnswer = Convert.ToDouble(incomingAnswer);
+
+                                foreach (player plyr in playerList)
+                                {
+                                    if (newClient.client_name == plyr.name)
+                                    {
+                                        plyr.answers.Add(playerAnswer);
+                                        answeredNum++;
+                                    }
                                 }
                             }
+                            barrier.SignalAndWait();
 
+                            double player1guess = Math.Abs(answers[i] - playerList[0].answers[i]);
+                            double player2guess = Math.Abs(answers[i] - playerList[1].answers[i]);
 
-                            if (playerAnswer == answers[i % (answers.Count())])
+                            if (player1guess < player2guess)
                             {
-                                control_panel.AppendText("Server: we have winner \n");
+                                int newScore = playerList[0].score + 1;
+                                //playerList[0].score = newScore;
+                                control_panel.AppendText("Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                            }
+                            else
+                            {
+                                //playerList[0].
+                                control_panel.AppendText("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
                             }
 
                         }
 
                     }
-
-
-
-
-
-                    /*
-                    //Send question to client
-                    Byte[] questionBuffer = new Byte[64];
-                    questionBuffer = Encoding.Default.GetBytes("Question 1. What is answer?");
-                    newClient.client_socket.Send(questionBuffer);
-                    control_panel.AppendText("Question 1. What is answer?\n");
-
-                    Byte[] comingAnswer = new Byte[64];
-                    newClient.client_socket.Receive(comingAnswer);
-                    string incomingMessage = Encoding.Default.GetString(comingAnswer);
-                    string answer = incomingMessage.Substring(incomingMessage.IndexOf(' ') + 1, incomingMessage.IndexOf('\0'));
-                    answer = answer.Substring(0, answer.IndexOf('\0'));
-                    control_panel.AppendText("Client named " + newClient.client_name + ", answer is: " + answer + "\n");
-
-
-
-                    //thisClient.Receive(buffer); 
-                    //string incomingMessage = Encoding.Default.GetString(buffer);
-                    //incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf("\0"));
-                    //control_panel.AppendText("Client named: " + incomingMessage + " is connected.\n");
-                    */
-
 
                 }
                 catch
