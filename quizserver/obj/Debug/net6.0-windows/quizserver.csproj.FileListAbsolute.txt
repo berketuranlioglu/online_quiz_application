@@ -1,0 +1,34 @@
+C:\Users\AYSUN\source\repos\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.exe
+C:\Users\AYSUN\source\repos\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.deps.json
+C:\Users\AYSUN\source\repos\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.runtimeconfig.json
+C:\Users\AYSUN\source\repos\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.dll
+C:\Users\AYSUN\source\repos\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.pdb
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.AssemblyReference.cache
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.Form1.resources
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.GenerateResource.cache
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.AssemblyInfoInputs.cache
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.AssemblyInfo.cs
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.CoreCompileInputs.cache
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.dll
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\refint\quizserver.dll
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.pdb
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.genruntimeconfig.cache
+C:\Users\AYSUN\source\repos\quizserver\quizserver\obj\Debug\net6.0-windows\ref\quizserver.dll
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.exe
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.deps.json
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.runtimeconfig.json
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.dll
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\bin\Debug\net6.0-windows\quizserver.pdb
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.AssemblyReference.cache
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.Form1.resources
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.GenerateResource.cache
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.AssemblyInfoInputs.cache
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.AssemblyInfo.cs
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.csproj.CoreCompileInputs.cache
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.dll
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\refint\quizserver.dll
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.pdb
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\quizserver.genruntimeconfig.cache
+C:\Users\hamdi\Desktop\SU\CS408\Project Step 1\quizserver\quizserver\obj\Debug\net6.0-windows\ref\quizserver.dll
