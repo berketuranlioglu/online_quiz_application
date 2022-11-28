@@ -44,8 +44,6 @@ namespace client
 
                             button_connect.Enabled = false;
                             button_disconnect.Enabled = true;
-                            button_send.Enabled = true;
-                            textBox_answer.Enabled = true;
                             textBox_ip.Enabled = false;
                             textBox_port.Enabled = false;
                             textBox_name.Enabled = false;
@@ -101,6 +99,10 @@ namespace client
                     string incomingMessage = Encoding.Default.GetString(buffer);
 
                     logs.AppendText("Server: " + incomingMessage + "\n");
+
+                    // Enabling the send section after the question has arrived
+                    textBox_answer.Enabled = true;
+                    button_send.Enabled = true;
                 }
                 catch
                 {
@@ -137,7 +139,11 @@ namespace client
                 Byte[] buffer = Encoding.Default.GetBytes(message);
                 clientSocket.Send(buffer);
                 logs.AppendText("My answer is: " + message + "\n");
+
+                // Disable the send section since we have already given an answer
                 textBox_answer.Text = "";
+                textBox_answer.Enabled = false;
+                button_send.Enabled = false;
             }
         }
 

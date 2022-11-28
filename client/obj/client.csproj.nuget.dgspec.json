@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\client.csproj": {}
+    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\client.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\client.csproj": {
+    "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\client.csproj",
+        "projectUniqueName": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\client.csproj",
         "projectName": "client",
-        "projectPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\client.csproj",
+        "projectPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\client.csproj",
         "packagesPath": "C:\\Users\\hamdi\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\obj\\",
+        "outputPath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hamdi\\AppData\\Roaming\\NuGet\\NuGet.Config",

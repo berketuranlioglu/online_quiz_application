@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "935aR63vlpgDe7ItVUuxrB1Mkv+HLjECU0U8VduJDhmG5W8E9bPHW3athBrzKDcsyXml/I77bhnINNjgO3xlwA==",
+  "dgSpecHash": "29YCiDiodhyEI6RKiLeOSIdPm7gC1OXPFnBIBas+B9SYRaxshgbTsxxHfKtkdeYT5vQ9M5h84zDuRq0/vtD47w==",
   "success": true,
-  "projectFilePath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\client\\client\\client\\client.csproj",
+  "projectFilePath": "C:\\Users\\hamdi\\Desktop\\SU\\CS408\\Project Step 1\\quizserver\\cs408_project_step1\\client\\client.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }
