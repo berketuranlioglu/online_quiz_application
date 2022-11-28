@@ -241,7 +241,7 @@ namespace quizserver
                         lock (locked)
                         {
                             Byte[] gameStart = new Byte[64];
-                            gameStart = Encoding.Default.GetBytes("Server: Welcome to the game. We are starting...\n");
+                            gameStart = Encoding.Default.GetBytes("Welcome to the game. We are starting...\n");
                             newClient.client_socket.Send(gameStart);
                         }
 
@@ -279,12 +279,12 @@ namespace quizserver
 
                                 if (player1guess < player2guess)
                                 {
-                                    int newScore = playerList[0].score + 1;
-                                    var temp = playerList[0];
-                                    temp.score = newScore;
-                                    playerList[0] = temp;
                                     if (newClient.client_name == playerList[0].name)
                                     {
+                                        int newScore = playerList[0].score + 1;
+                                        var temp = playerList[0];
+                                        temp.score = newScore;
+                                        playerList[0] = temp;
                                         control_panel.AppendText("Server: Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
                                     }
 
@@ -296,12 +296,12 @@ namespace quizserver
                                 }
                                 else
                                 {
-                                    int newScore = playerList[1].score + 1;
-                                    var temp = playerList[1];
-                                    temp.score = newScore;
-                                    playerList[1] = temp;
                                     if (newClient.client_name == playerList[0].name)
                                     {
+                                        int newScore = playerList[1].score + 1;
+                                        var temp = playerList[1];
+                                        temp.score = newScore;
+                                        playerList[1] = temp;
                                         control_panel.AppendText("Server: Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
                                     }
 
@@ -310,16 +310,34 @@ namespace quizserver
                                     winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
-
-                                // Score table to see the results in general
-                                if (newClient.client_name == playerList[0].name)
-                                {
-                                    scoreTable();
-                                }
                             }
                             barrier.SignalAndWait();
 
+                            // Score table to see the results in general
+                            string table = scoreTable();
+                            if (newClient.client_name == playerList[0].name)
+                            {
+                                control_panel.AppendText(table);
+                            }
+
+                            Byte[] tableBuffer = new Byte[64];
+                            tableBuffer = Encoding.Default.GetBytes(table);
+                            newClient.client_socket.Send(tableBuffer);
+                            barrier.SignalAndWait();
+
                         }
+
+                        // Questions are finished, time to declare the winner
+                        string winner = theWinner();
+                        if (newClient.client_name == playerList[0].name)
+                        {
+                            control_panel.AppendText(winner);
+                        }
+
+                        Byte[] victoryBuffer = new Byte[64];
+                        victoryBuffer = Encoding.Default.GetBytes(winner);
+                        newClient.client_socket.Send(victoryBuffer);
+                        barrier.SignalAndWait();
 
                     }
 
@@ -339,27 +357,39 @@ namespace quizserver
             }
         }
 
-        private void scoreTable()
+        private string scoreTable()
         {
-            control_panel.AppendText("-------------------------\n");
-            control_panel.AppendText("SCORE TABLE:\n");
+            string table = "-------------------------\nSCORE TABLE:\n";
 
             if (playerList[0].score > playerList[1].score)
             {
-                control_panel.AppendText("1. " + playerList[0].name + ": " + playerList[0].score + " points\n");
-                control_panel.AppendText("2. " + playerList[1].name + ": " + playerList[1].score + " points\n");
+                table += "1. " + playerList[0].name + ": " + playerList[0].score + " points\n"
+                    + "2. " + playerList[1].name + ": " + playerList[1].score + " points\n";
+            }
+            else if (playerList[1].score >= playerList[0].score)
+            {
+                table += "1. " + playerList[1].name + ": " + playerList[1].score + " points\n"
+                    + "2. " + playerList[0].name + ": " + playerList[0].score + " points\n";
+            }
+            table += "-------------------------\n";
+
+            return table;
+        }
+
+        private string theWinner()
+        {
+            if (playerList[0].score > playerList[1].score)
+            {
+                return ("END OF THE GAME! THE WINNER IS: " + playerList[0].name + "!\n");
             }
             else if (playerList[1].score > playerList[0].score)
             {
-                control_panel.AppendText("1. " + playerList[1].name + ": " + playerList[1].score + " points\n");
-                control_panel.AppendText("2. " + playerList[0].name + ": " + playerList[0].score + " points\n");
+                return ("END OF THE GAME! THE WINNER IS: " + playerList[1].name + "!\n");
             }
-            control_panel.AppendText("-------------------------\n");
-        }
-
-        private void checkWinner()
-        {
-
+            else
+            {
+                return ("THERE IS A TIE, WE HAVE TWO WINNERS!\n");
+            }
         }
 
         private void listDescending()
