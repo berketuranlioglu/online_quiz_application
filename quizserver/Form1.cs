@@ -48,7 +48,7 @@ namespace quizserver
         {
             public String name;
             public List<double> answers;
-            public int score;
+            public double score;
 
         }
 
@@ -281,7 +281,7 @@ namespace quizserver
                                 {
                                     if (newClient.client_name == playerList[0].name)
                                     {
-                                        int newScore = playerList[0].score + 1;
+                                        double newScore = playerList[0].score + 1;
                                         var temp = playerList[0];
                                         temp.score = newScore;
                                         playerList[0] = temp;
@@ -294,11 +294,11 @@ namespace quizserver
                                     newClient.client_socket.Send(winnerBuffer);
 
                                 }
-                                else
+                                else if (player2guess < player1guess)
                                 {
                                     if (newClient.client_name == playerList[0].name)
                                     {
-                                        int newScore = playerList[1].score + 1;
+                                        double newScore = playerList[1].score + 1;
                                         var temp = playerList[1];
                                         temp.score = newScore;
                                         playerList[1] = temp;
@@ -309,6 +309,28 @@ namespace quizserver
                                     Byte[] winnerBuffer = new Byte[64];
                                     winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
                                     newClient.client_socket.Send(winnerBuffer);
+                                }
+                                else
+                                {
+                                    if (newClient.client_name == playerList[0].name)
+                                    {
+                                        double newScore0 = playerList[0].score + 0.5;
+                                        var temp0 = playerList[0];
+                                        temp0.score = newScore0;
+                                        playerList[0] = temp0;
+
+                                        double newScore1 = playerList[1].score + 0.5;
+                                        var temp1 = playerList[1];
+                                        temp1.score = newScore1;
+                                        playerList[1] = temp1;
+
+                                        control_panel.AppendText("There is a tie, both players get 0.5 points each.\n");
+                                    }
+
+                                    // Sending the tie information to the player
+                                    Byte[] tieBuffer = new Byte[64];
+                                    tieBuffer = Encoding.Default.GetBytes("There is a tie, both players get 0.5 points each.\n");
+                                    newClient.client_socket.Send(tieBuffer);
                                 }
                             }
                             barrier.SignalAndWait();
@@ -339,6 +361,8 @@ namespace quizserver
                         newClient.client_socket.Send(victoryBuffer);
                         barrier.SignalAndWait();
 
+                        //TODO: Winner sonrasi tum degerler sifirlanmali
+                        // ki yeni oyuna sifirdan baslayalim
                     }
 
                 }
@@ -359,7 +383,7 @@ namespace quizserver
 
         private string scoreTable()
         {
-            string table = "-------------------------\nSCORE TABLE:\n";
+            string table = "\n-------------------------\nSCORE TABLE:\n";
 
             if (playerList[0].score > playerList[1].score)
             {
@@ -391,7 +415,6 @@ namespace quizserver
                 return ("THERE IS A TIE, WE HAVE TWO WINNERS!\n");
             }
         }
-
 
         //if exit button is clicked
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
