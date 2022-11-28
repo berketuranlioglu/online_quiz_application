@@ -218,8 +218,8 @@ namespace quizserver
             if (playerList.Count == 2)
             {
                 Byte[] gameStart = new Byte[64];
-                gameStart = Encoding.Default.GetBytes("SERVER: Welcome to the game. We are starting...\n");
-                control_panel.AppendText("SERVER: Welcome to the game. We are starting...\n");
+                gameStart = Encoding.Default.GetBytes("Server: Welcome to the game. We are starting...\n");
+                control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
 
             }
 
@@ -276,20 +276,40 @@ namespace quizserver
                             }
                             barrier.SignalAndWait();
 
-                            double player1guess = Math.Abs(answers[i] - playerList[0].answers[i]);
-                            double player2guess = Math.Abs(answers[i] - playerList[1].answers[i]);
+                            lock (locked)
+                            {
+                                double player1guess = Math.Abs(answers[i] - playerList[0].answers[i]);
+                                double player2guess = Math.Abs(answers[i] - playerList[1].answers[i]);
 
-                            if (player1guess < player2guess)
-                            {
-                                int newScore = playerList[0].score + 1;
-                                //playerList[0].score = newScore;
-                                control_panel.AppendText("Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                if (player1guess < player2guess)
+                                {
+                                    int newScore = playerList[0].score + 1;
+                                    var temp = playerList[0];
+                                    temp.score = newScore;
+                                    playerList[0] = temp;
+                                    control_panel.AppendText("Server: Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+
+                                    // Sending the winner information to the player
+                                    Byte[] winnerBuffer = new Byte[64];
+                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    newClient.client_socket.Send(winnerBuffer);
+
+                                }
+                                else
+                                {
+                                    int newScore = playerList[1].score + 1;
+                                    var temp = playerList[1];
+                                    temp.score = newScore;
+                                    playerList[1] = temp;
+                                    control_panel.AppendText("Server: Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+
+                                    // Sending the winner information to the player
+                                    Byte[] winnerBuffer = new Byte[64];
+                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    newClient.client_socket.Send(winnerBuffer);
+                                }
                             }
-                            else
-                            {
-                                //playerList[0].
-                                control_panel.AppendText("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
-                            }
+                            barrier.SignalAndWait();
 
                         }
 
