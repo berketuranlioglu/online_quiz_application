@@ -357,15 +357,18 @@ namespace quizserver
             control_panel.AppendText("-------------------------\n");
         }
 
-        private void checkWinner()
+        private void theWinner()
         {
-
+            if (playerList[0].score > playerList[1].score)
+            {
+                control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + playerList[0].name +"\n");
+            }
+            else
+            {
+                control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + playerList[1].name + "\n");
+            }
         }
 
-        private void listDescending()
-        {
-
-        }
 
         //if exit button is clicked
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
