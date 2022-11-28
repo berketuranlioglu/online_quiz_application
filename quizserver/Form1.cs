@@ -392,10 +392,6 @@ namespace quizserver
             }
         }
 
-        private void listDescending()
-        {
-
-        }
 
         //if exit button is clicked
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
