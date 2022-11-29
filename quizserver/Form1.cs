@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Runtime.InteropServices;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Reflection;
 
 
 namespace quizserver
@@ -391,9 +392,21 @@ namespace quizserver
                 {
                     if (!terminating)
                     {
-                        control_panel.AppendText("A client has disconnected\n");
-                        //inform the other player about disconnection
-                        //make it winner
+                        string disconnectMessage = "Player " + newClient.client_name + " has disconnected\n";
+                        control_panel.AppendText(disconnectMessage);
+
+                        // if it will be the first disconnection
+                        if (clientList.Count == 2)
+                        {
+                            // finding the other (not disconnected) client
+                            client otherClient = clientList[0].client_name != newClient.client_name
+                                ? clientList[0] : clientList[1];
+                            Byte[] victoryBuffer = new Byte[64];
+                            disconnectMessage += "YOU ARE THE WINNER!\n";
+                            victoryBuffer = Encoding.Default.GetBytes(disconnectMessage);
+                            otherClient.client_socket.Send(victoryBuffer);
+                            control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
+                        }
                     }
                     newClient.client_socket.Close();
                     clientList.Remove(newClient);
