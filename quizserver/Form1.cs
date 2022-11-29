@@ -250,11 +250,11 @@ namespace quizserver
                             // Sending the question
                             int answeredNum = 0;
                             Byte[] qBuffer = new Byte[64];
-                            qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
+                            qBuffer = Encoding.Default.GetBytes(questions[i % questions.Count()] + "\n");
                             newClient.client_socket.Send(qBuffer);
                             if (newClient.client_name == playerList[0].name)
                             {
-                                control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
+                                control_panel.AppendText("Server: " + questions[i % questions.Count()] + "\n");
                             }
 
                             // Receiving the answers
@@ -279,14 +279,14 @@ namespace quizserver
 
                             lock (locked)
                             {
-                                double player1guess = Math.Abs(answers[i] - playerList[0].answers[i]);
-                                double player2guess = Math.Abs(answers[i] - playerList[1].answers[i]);
+                                double player1guess = Math.Abs(answers[i % answers.Count()] - playerList[0].answers[i]);
+                                double player2guess = Math.Abs(answers[i % answers.Count()] - playerList[1].answers[i]);
                                 String statusString = "";
                                 String status = "";
                                 if (player1guess < player2guess) //the winner is player[0]
                                 {
                                     statusString = playerList[0].name + " got the point!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
 
                                     if (newClient.client_name == playerList[0].name)
                                     {
@@ -313,7 +313,7 @@ namespace quizserver
                                 else if (player2guess < player1guess) //the winner is player[1]
                                 {
                                     statusString = playerList[1].name + " got the point!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
                                         double newScore = playerList[1].score + 1;
@@ -332,7 +332,7 @@ namespace quizserver
                                 else
                                 {
                                     statusString = "The point is shared!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
                                         double newScore0 = playerList[0].score + 0.5;
@@ -383,8 +383,14 @@ namespace quizserver
                         newClient.client_socket.Send(victoryBuffer);
                         barrier.SignalAndWait();
 
-                        //TODO: Winner sonrasi tum degerler sifirlanmali
-                        // ki yeni oyuna sifirdan baslayalim
+                        for (int i = 0; i < playerList.Count; i++)
+                        {
+                            playerList[i].answers.Clear();
+
+                            var temp1 = playerList[i];
+                            temp1.score = 0;
+                            playerList[i] = temp1;
+                        }
                     }
 
                 }
