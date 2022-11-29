@@ -235,7 +235,10 @@ namespace quizserver
                             Byte[] gameStart = new Byte[64];
                             gameStart = Encoding.Default.GetBytes("Welcome to the game. We are starting...\n");
                             newClient.client_socket.Send(gameStart);
-                            control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
+                            if (newClient.client_name == playerList[0].name)
+                            {
+                                control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
+                            }
                         }
 
                         //while # of questions are finished
