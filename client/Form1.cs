@@ -101,8 +101,11 @@ namespace client
                     logs.AppendText("Server: " + incomingMessage + "\n");
 
                     // Enabling the send section after the question has arrived
-                    textBox_answer.Enabled = true;
-                    button_send.Enabled = true;
+                    if (incomingMessage.Contains('?'))
+                    {
+                        textBox_answer.Enabled = true;
+                        button_send.Enabled = true;
+                    }
                 }
                 catch
                 {
