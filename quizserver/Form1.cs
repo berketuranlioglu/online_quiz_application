@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Runtime.InteropServices;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 
 namespace quizserver
@@ -278,46 +279,58 @@ namespace quizserver
                             {
                                 double player1guess = Math.Abs(answers[i] - playerList[0].answers[i]);
                                 double player2guess = Math.Abs(answers[i] - playerList[1].answers[i]);
-
-                                if (player1guess < player2guess)
+                                String statusString = "";
+                                String status = "";
+                                if (player1guess < player2guess) //the winner is player[0]
                                 {
+                                    statusString = "The winner is " + playerList[0].name;
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
+
                                     if (newClient.client_name == playerList[0].name)
                                     {
                                         double newScore = playerList[0].score + 1;
                                         var temp = playerList[0];
                                         temp.score = newScore;
                                         playerList[0] = temp;
+
+                                        control_panel.AppendText(status);
+                                        /*
                                         control_panel.AppendText("Server: Player named " + playerList[0].name
                                             + " earned the point for Question " + (i + 1) + " with the answer " + playerList[0].answers[i] + "!\n");
+                                        *
+                                        */
                                     }
+                                    
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
-                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[0].name
-                                        + " earned the point for Question " + (i + 1) + " with the answer " + playerList[0].answers[i] + "!\n");
+                                    winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
 
                                 }
-                                else if (player2guess < player1guess)
+                                else if (player2guess < player1guess) //the winner is player[1]
                                 {
+                                    statusString = "The winner is " + playerList[1].name;
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
                                         double newScore = playerList[1].score + 1;
                                         var temp = playerList[1];
                                         temp.score = newScore;
                                         playerList[1] = temp;
-                                        control_panel.AppendText("Server: Player named " + playerList[1].name
-                                            + " earned the point for Question " + (i + 1) + " with the answer " + playerList[1].answers[i] + "!\n");
+
+                                        control_panel.AppendText(status);
                                     }
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
-                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name
-                                        + " earned the point for Question " + (i + 1) + " with the answer " + playerList[1].answers[i] + "!\n");
+                                    winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
                                 else
                                 {
+                                    statusString = "The game is tie!";
+                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
                                         double newScore0 = playerList[0].score + 0.5;
@@ -330,12 +343,13 @@ namespace quizserver
                                         temp1.score = newScore1;
                                         playerList[1] = temp1;
 
-                                        control_panel.AppendText("There is a tie, both players get 0.5 points each.\n");
+
+                                        control_panel.AppendText(status);
                                     }
 
                                     // Sending the tie information to the player
                                     Byte[] tieBuffer = new Byte[64];
-                                    tieBuffer = Encoding.Default.GetBytes("There is a tie, both players get 0.5 points each.\n");
+                                    tieBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(tieBuffer);
                                 }
                             }
@@ -420,6 +434,17 @@ namespace quizserver
             {
                 return ("THERE IS A TIE, WE HAVE TWO WINNERS!\n");
             }
+        }
+
+        private String currentStatus(player player1, player player2, String status, double correctAnswer, int currentQuestion)
+        {
+            string currentTable = "\n-------------------------\nSTATUS TABLE:\n"
+                + "Player " + player1.name + "'s answer: " + player1.answers[currentQuestion] + "\n"
+                + "Player " + player2.name + "'s answer: " + player2.answers[currentQuestion] + "\n"
+                + "The correct answer: " + correctAnswer + "\n"
+                + "The status of this game: " + status + "\n";
+            return currentTable;
+
         }
 
         //if exit button is clicked
