@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -260,7 +261,7 @@ namespace quizserver
                             newClient.client_socket.Receive(aBuffer);
                             String incomingAnswer = Encoding.Default.GetString(aBuffer);
                             incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
-                            double playerAnswer = Convert.ToDouble(incomingAnswer);
+                            double playerAnswer = ConvertToDouble(incomingAnswer);
                             control_panel.AppendText(newClient.client_name + "'s answer is: " + incomingAnswer + "\n");
 
                             // Adding the answers to lists according to the players
@@ -283,7 +284,7 @@ namespace quizserver
                                 String status = "";
                                 if (player1guess < player2guess) //the winner is player[0]
                                 {
-                                    statusString = "The winner is " + playerList[0].name;
+                                    statusString = playerList[0].name + " got the point!";
                                     status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
 
                                     if (newClient.client_name == playerList[0].name)
@@ -300,7 +301,7 @@ namespace quizserver
                                         *
                                         */
                                     }
-                                    
+
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
@@ -310,7 +311,7 @@ namespace quizserver
                                 }
                                 else if (player2guess < player1guess) //the winner is player[1]
                                 {
-                                    statusString = "The winner is " + playerList[1].name;
+                                    statusString = playerList[1].name + " got the point!";
                                     status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
@@ -329,7 +330,7 @@ namespace quizserver
                                 }
                                 else
                                 {
-                                    statusString = "The game is tie!";
+                                    statusString = "The point is shared!";
                                     status = currentStatus(playerList[0], playerList[1], statusString, answers[i], i);
                                     if (newClient.client_name == playerList[0].name)
                                     {
@@ -442,9 +443,42 @@ namespace quizserver
                 + "Player " + player1.name + "'s answer: " + player1.answers[currentQuestion] + "\n"
                 + "Player " + player2.name + "'s answer: " + player2.answers[currentQuestion] + "\n"
                 + "The correct answer: " + correctAnswer + "\n"
-                + "The status of this game: " + status + "\n";
+                + "The status for this question: " + status + "\n";
             return currentTable;
 
+        }
+
+        private double ConvertToDouble(string s)
+        {
+            char systemSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.CurrencyDecimalSeparator[0];
+            double result = 0;
+            try
+            {
+                if (s != null)
+                    if (!s.Contains(","))
+                        result = double.Parse(s, CultureInfo.InvariantCulture);
+                    else
+                        result = Convert.ToDouble(s.Replace(".", systemSeparator.ToString()).Replace(",", systemSeparator.ToString()));
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    result = Convert.ToDouble(s);
+                }
+                catch
+                {
+                    try
+                    {
+                        result = Convert.ToDouble(s.Replace(",", ";").Replace(".", ",").Replace(";", "."));
+                    }
+                    catch
+                    {
+                        throw new Exception("Wrong string-to-double format");
+                    }
+                }
+            }
+            return result;
         }
 
         //if exit button is clicked
