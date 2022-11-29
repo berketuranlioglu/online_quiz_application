@@ -214,14 +214,6 @@ namespace quizserver
             client newComer = clientList[clientList.Count() - 1];
 
             bool connected = true;
-            //send message to inform game starts
-            if (playerList.Count == 2)
-            {
-                Byte[] gameStart = new Byte[64];
-                gameStart = Encoding.Default.GetBytes("Server: Welcome to the game. We are starting...\n");
-                control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
-
-            }
 
             while (connected)
             {
@@ -243,11 +235,13 @@ namespace quizserver
                             Byte[] gameStart = new Byte[64];
                             gameStart = Encoding.Default.GetBytes("Welcome to the game. We are starting...\n");
                             newClient.client_socket.Send(gameStart);
+                            control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
                         }
 
                         //while # of questions are finished
                         for (int i = 0; i < noquestion; i++)
                         {
+                            // Sending the question
                             int answeredNum = 0;
                             Byte[] qBuffer = new Byte[64];
                             qBuffer = Encoding.Default.GetBytes(questions[i % (questions.Count())] + "\n");
@@ -256,12 +250,16 @@ namespace quizserver
                             {
                                 control_panel.AppendText("Server: " + questions[i % (questions.Count())] + "\n");
                             }
+
+                            // Receiving the answers
                             Byte[] aBuffer = new Byte[64];
                             newClient.client_socket.Receive(aBuffer);
                             String incomingAnswer = Encoding.Default.GetString(aBuffer);
                             incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
                             double playerAnswer = Convert.ToDouble(incomingAnswer);
+                            control_panel.AppendText(newClient.client_name + "'s answer is: " + incomingAnswer + "\n");
 
+                            // Adding the answers to lists according to the players
                             foreach (player plyr in playerList)
                             {
                                 if (newClient.client_name == plyr.name)
@@ -270,6 +268,7 @@ namespace quizserver
                                     answeredNum++;
                                 }
                             }
+
                             barrier.SignalAndWait();
 
                             lock (locked)
@@ -285,12 +284,14 @@ namespace quizserver
                                         var temp = playerList[0];
                                         temp.score = newScore;
                                         playerList[0] = temp;
-                                        control_panel.AppendText("Server: Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                        control_panel.AppendText("Server: Player named " + playerList[0].name
+                                            + " earned the point for Question " + (i + 1) + " with the answer " + playerList[0].answers[i] + "!\n");
                                     }
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
-                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[0].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[0].name
+                                        + " earned the point for Question " + (i + 1) + " with the answer " + playerList[0].answers[i] + "!\n");
                                     newClient.client_socket.Send(winnerBuffer);
 
                                 }
@@ -302,12 +303,14 @@ namespace quizserver
                                         var temp = playerList[1];
                                         temp.score = newScore;
                                         playerList[1] = temp;
-                                        control_panel.AppendText("Server: Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+                                        control_panel.AppendText("Server: Player named " + playerList[1].name
+                                            + " earned the point for Question " + (i + 1) + " with the answer " + playerList[1].answers[i] + "!\n");
                                     }
 
                                     // Sending the winner information to the player
                                     Byte[] winnerBuffer = new Byte[64];
-                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name + " earned the point for Question " + (i + 1) + "!\n");
+                                    winnerBuffer = Encoding.Default.GetBytes("Player named " + playerList[1].name
+                                        + " earned the point for Question " + (i + 1) + " with the answer " + playerList[1].answers[i] + "!\n");
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
                                 else
@@ -343,7 +346,7 @@ namespace quizserver
                             }
 
                             Byte[] tableBuffer = new Byte[64];
-                            tableBuffer = Encoding.Default.GetBytes(table);
+                            tableBuffer = Encoding.Default.GetBytes("\n" + table);
                             newClient.client_socket.Send(tableBuffer);
                             barrier.SignalAndWait();
 
@@ -383,7 +386,7 @@ namespace quizserver
 
         private string scoreTable()
         {
-            string table = "\n-------------------------\nSCORE TABLE:\n";
+            string table = "-------------------------\nSCORE TABLE:\n";
 
             if (playerList[0].score > playerList[1].score)
             {
