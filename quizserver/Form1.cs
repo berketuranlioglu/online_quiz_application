@@ -231,6 +231,7 @@ namespace quizserver
                     //list the score table
 
 
+                    // Initial welcome to the players
                     if (playerList.Count == 2)
                     {
                         lock (locked)
@@ -296,15 +297,9 @@ namespace quizserver
                                         playerList[0] = temp;
 
                                         control_panel.AppendText(status);
-                                        /*
-                                        control_panel.AppendText("Server: Player named " + playerList[0].name
-                                            + " earned the point for Question " + (i + 1) + " with the answer " + playerList[0].answers[i] + "!\n");
-                                        *
-                                        */
                                     }
 
-
-                                    // Sending the winner information to the player
+                                    // Sending the who-got-correct-answer information to the player
                                     Byte[] winnerBuffer = new Byte[64];
                                     winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
@@ -324,7 +319,7 @@ namespace quizserver
                                         control_panel.AppendText(status);
                                     }
 
-                                    // Sending the winner information to the player
+                                    // Sending the who-got-correct-answer information to the player
                                     Byte[] winnerBuffer = new Byte[64];
                                     winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
@@ -364,6 +359,7 @@ namespace quizserver
                                 control_panel.AppendText(table);
                             }
 
+                            // Sending the table to the players
                             Byte[] tableBuffer = new Byte[64];
                             tableBuffer = Encoding.Default.GetBytes("\n" + table);
                             newClient.client_socket.Send(tableBuffer);
@@ -383,14 +379,18 @@ namespace quizserver
                         newClient.client_socket.Send(victoryBuffer);
                         barrier.SignalAndWait();
 
-                        for (int i = 0; i < playerList.Count; i++)
+                        // Closing the sockets of the players, game is finished
+                        lock (locked)
                         {
-                            playerList[i].answers.Clear();
-
-                            var temp1 = playerList[i];
-                            temp1.score = 0;
-                            playerList[i] = temp1;
+                            if (newClient.client_name == playerList[0].name)
+                            {
+                                control_panel.AppendText("Players' sockets are being closed.\n");
+                            }
+                            newClient.client_socket.Close();
+                            clientList.Remove(newClient);
+                            connected = false;
                         }
+                        barrier.SignalAndWait();
                     }
 
                 }
