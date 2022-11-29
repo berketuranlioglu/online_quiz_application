@@ -98,13 +98,20 @@ namespace client
 
                     string incomingMessage = Encoding.Default.GetString(buffer);
 
-                    logs.AppendText("Server: " + incomingMessage + "\n");
-
-                    // Enabling the send section after the question has arrived
-                    if (incomingMessage.Contains('?'))
+                    if (incomingMessage.Substring(0, 1) != "\0")
                     {
-                        textBox_answer.Enabled = true;
-                        button_send.Enabled = true;
+                        logs.AppendText("Server: " + incomingMessage + "\n");
+
+                        // Enabling the send section after the question has arrived
+                        if (incomingMessage.Contains('?'))
+                        {
+                            textBox_answer.Enabled = true;
+                            button_send.Enabled = true;
+                        }
+                    }
+                    else
+                    {
+                        clientSocket.Close();
                     }
                 }
                 catch
