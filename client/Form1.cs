@@ -136,8 +136,9 @@ namespace client
         private void button_send_Click(object sender, EventArgs e)
         {
             string message = textBox_answer.Text;
+            double num;
 
-            if (message != "" && message.Length <= 64)
+            if (message != "" && double.TryParse(message, out num) && message.Length <= 64)
             {
                 Byte[] buffer = Encoding.Default.GetBytes(message);
                 clientSocket.Send(buffer);
@@ -147,6 +148,11 @@ namespace client
                 textBox_answer.Text = "";
                 textBox_answer.Enabled = false;
                 button_send.Enabled = false;
+            }
+            // In case the user entered other type than integer
+            else
+            {
+                textBox_answer.Text = "";
             }
         }
 
