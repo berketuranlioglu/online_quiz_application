@@ -67,8 +67,6 @@ namespace quizserver
 
         List<serverAnswerItem> serverAnswerList = new List<serverAnswerItem>(); //the list to keep the answers of users
 
-        // List<serverAnswerItem> serverAnswerList = new List<serverAnswerItem>(); 
-
         public Form1()
         {
             Control.CheckForIllegalCrossThreadCalls = false;
@@ -136,6 +134,13 @@ namespace quizserver
         {
             while (listening)
             {
+                if (gameFinished == true)
+                {
+                    playerList.RemoveAt(1);
+                    playerList.RemoveAt(0);
+                    gameFinished = false;
+                }
+
                 try
                 {
                     //create client with its socket
@@ -185,9 +190,13 @@ namespace quizserver
                     }
                     else
                     {
+                        Byte[] nameError = new Byte[64];
+                        nameError = Encoding.Default.GetBytes("Player " + newClient.client_name + " already exists.\n");
+                        newClient.client_socket.Send(nameError);
                         control_panel.AppendText("Player " + newClient.client_name + " already exists.\n");
                         newClient.client_socket.Close();
                         clientList.Remove(newClient);
+                        canbeplayer = true;
                     }
 
 
@@ -389,6 +398,7 @@ namespace quizserver
                             newClient.client_socket.Close();
                             clientList.Remove(newClient);
                             connected = false;
+                            gameFinished = true;
                         }
                         barrier.SignalAndWait();
                     }
@@ -414,9 +424,13 @@ namespace quizserver
                             control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
                         }
                     }
-                    newClient.client_socket.Close();
-                    clientList.Remove(newClient);
+                    for (int i = clientList.Count-1; i >= 0; i--)
+                    {
+                        clientList[i].client_socket.Close();
+                        clientList.Remove(clientList[i]);
+                    }
                     connected = false;
+                    gameFinished = true;
                 }
             }
         }
