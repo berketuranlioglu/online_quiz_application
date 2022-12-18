@@ -34,6 +34,7 @@
             this.button_listen = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.textbox_noquestion = new System.Windows.Forms.TextBox();
+            this.button_start_game = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label_port
@@ -65,7 +66,7 @@
             // 
             // button_listen
             // 
-            this.button_listen.Location = new System.Drawing.Point(191, 80);
+            this.button_listen.Location = new System.Drawing.Point(139, 86);
             this.button_listen.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.button_listen.Name = "button_listen";
             this.button_listen.Size = new System.Drawing.Size(82, 22);
@@ -90,13 +91,24 @@
             this.textbox_noquestion.Name = "textbox_noquestion";
             this.textbox_noquestion.Size = new System.Drawing.Size(41, 23);
             this.textbox_noquestion.TabIndex = 5;
-            this.textbox_noquestion.Text = "10";
+            this.textbox_noquestion.Text = "5";
+            // 
+            // button_start_game
+            // 
+            this.button_start_game.Location = new System.Drawing.Point(272, 86);
+            this.button_start_game.Name = "button_start_game";
+            this.button_start_game.Size = new System.Drawing.Size(75, 23);
+            this.button_start_game.TabIndex = 6;
+            this.button_start_game.Text = "Start Game";
+            this.button_start_game.UseVisualStyleBackColor = true;
+            this.button_start_game.Click += new System.EventHandler(this.button_start_game_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(499, 338);
+            this.Controls.Add(this.button_start_game);
             this.Controls.Add(this.textbox_noquestion);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button_listen);
@@ -119,5 +131,6 @@
         private Button button_listen;
         private Label label1;
         private TextBox textbox_noquestion;
+        private Button button_start_game;
     }
 }
