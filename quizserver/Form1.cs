@@ -38,7 +38,7 @@ namespace quizserver
         bool gameFinished = false;
         bool gameStarted = false;
 
-        static Barrier barrier = new Barrier(2, x => Console.WriteLine("Both threads have come to the end.\n"));
+        static Barrier barrier = new Barrier(0, x => Console.WriteLine("Both threads have come to the end.\n"));
 
 
         struct client
@@ -112,7 +112,7 @@ namespace quizserver
             {
                 IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, serverPort);
                 serverSocket.Bind(endPoint);
-                serverSocket.Listen(2); //listen two clients for now
+                serverSocket.Listen(-1); //listen numerous clients
 
                 listening = true;
                 button_listen.Enabled = false;
@@ -178,6 +178,9 @@ namespace quizserver
                         newPlayer.score = 0;
                         newPlayer.answers = new List<double>();
 
+                        // it also increments the barrier
+                        barrier.AddParticipant();
+
                         playerList.Add(newPlayer);
 
                         //successfully start thread with client
@@ -233,7 +236,7 @@ namespace quizserver
                     //list the score table
 
 
-                            // Initial welcome to the players
+                    // Initial welcome to the players
                     if (gameStarted)
                     {
                         lock (locked)
@@ -282,41 +285,37 @@ namespace quizserver
 
                             lock (locked)
                             {
-                                double player1guess = Math.Abs(answers[i % answers.Count()] - playerList[0].answers[i]);
-                                double player2guess = Math.Abs(answers[i % answers.Count()] - playerList[1].answers[i]);
+                                // collect all the guesses
+                                List<Double> guesses = new List<Double>();
+
+                                for (int j = 0; j < playerList.Count(); j++)
+                                    guesses.Add(Math.Abs(answers[i % answers.Count()] - playerList[j].answers[i]));
+
                                 String statusString = "";
                                 String status = "";
-                                if (player1guess < player2guess) //the winner is player[0]
+
+                                // find the closest answer
+                                double closestGuess = guesses.Min();
+                                List<int> closestPlayers = new List<int>();
+
+                                // check if there are multiple closest players
+                                for (int j = 0; j < guesses.Count(); j++)
+                                    if (guesses[j] == closestGuess)
+                                        closestPlayers.Add(j);
+
+                                // if there is only one winner (i.e., no shared points)
+                                if (closestPlayers.Count() == 1)
                                 {
-                                    statusString = playerList[0].name + " got the point!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
+                                    // make the closest winner
+                                    statusString = playerList[closestPlayers[0]].name + " got the point!";
+                                    status = currentStatus(playerList, statusString, answers[i % answers.Count()], i);
 
-                                    if (newClient.client_name == playerList[0].name)
+                                    if (newClient.client_name == playerList[closestPlayers[0]].name)
                                     {
-                                        double newScore = playerList[0].score + 1;
-                                        var temp = playerList[0];
+                                        double newScore = playerList[closestPlayers[0]].score + 1;
+                                        var temp = playerList[closestPlayers[0]];
                                         temp.score = newScore;
-                                        playerList[0] = temp;
-
-                                        control_panel.AppendText(status);
-                                    }
-
-                                    // Sending the who-got-correct-answer information to the player
-                                    Byte[] winnerBuffer = new Byte[64];
-                                    winnerBuffer = Encoding.Default.GetBytes(status);
-                                    newClient.client_socket.Send(winnerBuffer);
-
-                                }
-                                else if (player2guess < player1guess) //the winner is player[1]
-                                {
-                                    statusString = playerList[1].name + " got the point!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
-                                    if (newClient.client_name == playerList[0].name)
-                                    {
-                                        double newScore = playerList[1].score + 1;
-                                        var temp = playerList[1];
-                                        temp.score = newScore;
-                                        playerList[1] = temp;
+                                        playerList[closestPlayers[0]] = temp;
 
                                         control_panel.AppendText(status);
                                     }
@@ -326,22 +325,20 @@ namespace quizserver
                                     winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
-                                else
+                                else // TODO: BOZUK
                                 {
-                                    statusString = "The point is shared!";
-                                    status = currentStatus(playerList[0], playerList[1], statusString, answers[i % answers.Count()], i);
+                                    statusString = "The point is shared among players!";
+                                    status = currentStatus(playerList, statusString, answers[i % answers.Count()], i);
+
                                     if (newClient.client_name == playerList[0].name)
                                     {
-                                        double newScore0 = playerList[0].score + 0.5;
-                                        var temp0 = playerList[0];
-                                        temp0.score = newScore0;
-                                        playerList[0] = temp0;
-
-                                        double newScore1 = playerList[1].score + 0.5;
-                                        var temp1 = playerList[1];
-                                        temp1.score = newScore1;
-                                        playerList[1] = temp1;
-
+                                        for (int j = 0; j < closestPlayers.Count(); j++)
+                                        {
+                                            double newScore = playerList[closestPlayers[j]].score + 0.5;
+                                            var temp = playerList[closestPlayers[j]];
+                                            temp.score = newScore;
+                                            playerList[closestPlayers[j]] = temp;
+                                        }
 
                                         control_panel.AppendText(status);
                                     }
@@ -355,7 +352,7 @@ namespace quizserver
                             barrier.SignalAndWait();
 
                             // Score table to see the results in general
-                            string table = scoreTable();
+                            string table = scoreTable(playerList);
                             if (newClient.client_name == playerList[0].name)
                             {
                                 control_panel.AppendText(table);
@@ -370,7 +367,7 @@ namespace quizserver
                         }
 
                         // Questions are finished, time to declare the winner
-                        string winner = theWinner();
+                        string winner = theWinner(playerList);
                         if (newClient.client_name == playerList[0].name)
                         {
                             control_panel.AppendText(winner);
@@ -413,7 +410,7 @@ namespace quizserver
                         string disconnectMessage = "Player " + newClient.client_name + " has disconnected\n";
                         control_panel.AppendText(disconnectMessage);
 
-                        lock(locked)
+                        lock (locked)
                         {
                             // if it will be the first disconnection
                             if (clientList.Count == 2)
@@ -427,7 +424,7 @@ namespace quizserver
                                 otherClient.client_socket.Send(victoryBuffer);
                                 control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
 
-                                for (int i = clientList.Count-1; i >= 0; i--)
+                                for (int i = clientList.Count - 1; i >= 0; i--)
                                 {
                                     // removing also from playerList
                                     if (playerList[i].name == newClient.client_name)
@@ -473,48 +470,57 @@ namespace quizserver
             }
         }
 
-        private string scoreTable()
+        private string scoreTable(List<player> plyrList)
         {
             string table = "-------------------------\nSCORE TABLE:\n";
 
-            if (playerList[0].score > playerList[1].score)
-            {
-                table += "1. " + playerList[0].name + ": " + playerList[0].score + " points\n"
-                    + "2. " + playerList[1].name + ": " + playerList[1].score + " points\n";
-            }
-            else if (playerList[1].score >= playerList[0].score)
-            {
-                table += "1. " + playerList[1].name + ": " + playerList[1].score + " points\n"
-                    + "2. " + playerList[0].name + ": " + playerList[0].score + " points\n";
-            }
+            // sort
+            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+
+            // print all players
+            for (int i = plyrList.Count()-1; i >= 0; i--)
+                table += (plyrList.Count()-i) + ". " + plyrList[i].name + ": " + plyrList[i].score + " points\n";
+
             table += "-------------------------\n";
 
             return table;
         }
 
-        private string theWinner()
+        private string theWinner(List<player> plyrList)
         {
-            if (playerList[0].score > playerList[1].score)
-            {
-                return ("END OF THE GAME! THE WINNER IS: " + playerList[0].name + "!\n");
-            }
-            else if (playerList[1].score > playerList[0].score)
-            {
-                return ("END OF THE GAME! THE WINNER IS: " + playerList[1].name + "!\n");
-            }
+            // sort
+            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+
+            List<String> winners = new List<String>();
+
+            // if other players' scores are also max
+            for (int i = 0; i < plyrList.Count(); i++)
+                if (plyrList[i].score == plyrList[plyrList.Count()-1].score)
+                    winners.Add(plyrList[i].name);
+
+            if (winners.Count() == 1)
+                return ("END OF THE GAME! THE WINNER IS: " + winners[0] + "!\n");
+
             else
             {
-                return ("THERE IS A TIE, WE HAVE TWO WINNERS!\n");
+                string w = "";
+
+                for (int i = 0; i < winners.Count(); i++)
+                    w += winners[i] + " ";
+
+                return ("THERE IS A TIE, OUR WINNERS ARE: " + w + "!\n");
             }
         }
 
-        private String currentStatus(player player1, player player2, String status, double correctAnswer, int currentQuestion)
+        private String currentStatus(List<player> plyrList, String status, double correctAnswer, int currentQuestion)
         {
-            string currentTable = "\n-------------------------\nSTATUS TABLE:\n"
-                + "Player " + player1.name + "'s answer: " + player1.answers[currentQuestion] + "\n"
-                + "Player " + player2.name + "'s answer: " + player2.answers[currentQuestion] + "\n"
-                + "The correct answer: " + correctAnswer + "\n"
-                + "The status for this question: " + status + "\n";
+            string currentTable = "\n-------------------------\nSTATUS TABLE:\n";
+
+            foreach (player plyr in plyrList)
+                currentTable += "Player " + plyr.name + "'s answer: " + plyr.answers[currentQuestion] + "\n";
+
+            currentTable += "The correct answer: " + correctAnswer + "\n"
+                            + "The status for this question: " + status + "\n";
             return currentTable;
         }
 
