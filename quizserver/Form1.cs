@@ -397,6 +397,12 @@ namespace quizserver
                                     temp.score = 0;
                                     playerList[i] = temp;
                                 }
+                                for (int j = 0; j < clientList.Count; j++)
+                                {
+                                    var temp2 = clientList[j];
+                                    temp2.wait_message = 0;
+                                    clientList[j] = temp2;
+                                }
                             }
                             gameFinished = true;
                             canEnter = true;
@@ -491,6 +497,7 @@ namespace quizserver
 
         private void button_start_game_Click(object sender, EventArgs e)
         {
+            waitingClients = 0;
             if (playerList.Count >= 2)
             {
                 gameStarted = true;
