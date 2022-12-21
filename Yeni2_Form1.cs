@@ -367,16 +367,21 @@ namespace quizserver
                             barrier.SignalAndWait();
 
                             // Score table to see the results in general
-                            string table = scoreTable(playerList);
-                            if (newClient.client_name == playerList[0].name)
+                            lock (locked)
                             {
-                                control_panel.AppendText(table);
+                                string table = scoreTable(playerList);
+                                if (newClient.client_name == playerList[0].name)
+                                {
+                                    control_panel.AppendText(table);
+                                }
+
+                                // Sending the table to the players
+                                Byte[] tableBuffer = new Byte[64];
+                                tableBuffer = Encoding.Default.GetBytes("\n" + table);
+                                newClient.client_socket.Send(tableBuffer);
+
                             }
 
-                            // Sending the table to the players
-                            Byte[] tableBuffer = new Byte[64];
-                            tableBuffer = Encoding.Default.GetBytes("\n" + table);
-                            newClient.client_socket.Send(tableBuffer);
                             barrier.SignalAndWait();
 
                         }
@@ -487,15 +492,24 @@ namespace quizserver
 
         private string scoreTable(List<player> plyrList)
         {
-            plyrList.RemoveRange(plyrList.Count()-waitingClients, waitingClients);
             string table = "-------------------------\nSCORE TABLE:\n";
 
+            // create a dummy list
+            List<player> tmpList = new List<player>();
+
+            // hard copy of plyrList
+            for (int i = 0; i < plyrList.Count()- waitingClients; i++)
+            {
+                var temp = playerList[i];
+                tmpList.Add(temp);
+            }
+
             // sort
-            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+            tmpList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
 
             // print all players
-            for (int i = plyrList.Count() - 1; i >= 0; i--)
-                table += (plyrList.Count() - i) + ". " + plyrList[i].name + ": " + plyrList[i].score + " points\n";
+            for (int i = tmpList.Count() - 1; i >= 0; i--)
+                table += (tmpList.Count() - i) + ". " + tmpList[i].name + ": " + tmpList[i].score + " points\n";
 
             table += "-------------------------\n";
 
