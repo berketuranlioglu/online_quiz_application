@@ -498,6 +498,10 @@ namespace quizserver
 
         private void button_start_game_Click(object sender, EventArgs e)
         {
+            for(int i = 0; i< waitingClients; i++)
+            {
+                barrier.AddParticipant();
+            }
             waitingClients = 0;
             if (playerList.Count >= 2)
             {
