@@ -70,7 +70,7 @@ namespace quizserver
 
         private void button_listen_Click(object sender, EventArgs e)
         {
-            //TO DO: TRY CATCH EKLENSIN BURAYA DIREKT IF YERINE
+            //TO DO: TRY CATCH 
 
             noquestion = Int32.Parse(textbox_noquestion.Text); //number of questions
 
@@ -403,6 +403,7 @@ namespace quizserver
                                     temp2.wait_message = 0;
                                     clientList[j] = temp2;
                                 }
+                                removedPlayerList.Clear();
                             }
                             gameFinished = true;
                             canEnter = true;
@@ -519,7 +520,7 @@ namespace quizserver
                 List<player> tmpList = new List<player>();
 
                 // hard copy of plyrList
-                for (int i = 0; i < plyrList.Count(); i++)
+                for (int i = 0; i < plyrList.Count() - waitingClients; i++)
                 {
                     var temp = plyrList[i];
                     tmpList.Add(temp);
