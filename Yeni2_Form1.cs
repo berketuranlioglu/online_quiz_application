@@ -140,7 +140,6 @@ namespace quizserver
             {
                 if (gameFinished == true)
                 {
-                    waitingClients = 0;
                     gameFinished = false;
                 }
 
@@ -247,7 +246,6 @@ namespace quizserver
                         waitingClients++;
                         barrier.RemoveParticipant();
                     }
-
 
                     // Initial welcome to the players
                     if (gameStarted & canEnter)
@@ -413,6 +411,13 @@ namespace quizserver
                                     temp.score = 0;
                                     playerList[i] = temp;
                                 }
+
+                                for (int j = 0; j < clientList.Count; j++)
+                                {
+                                    var temp2 = clientList[j];
+                                    temp2.wait_message = 0;
+                                    clientList[j] = temp2;
+                                }
                             }
                             gameFinished = true;
                             canEnter = true;
@@ -478,6 +483,7 @@ namespace quizserver
 
         private void button_start_game_Click(object sender, EventArgs e)
         {
+            waitingClients = 0;
             if (playerList.Count >= 2)
             {
                 control_panel.AppendText("ok.\n");
@@ -518,15 +524,25 @@ namespace quizserver
 
         private string theWinner(List<player> plyrList)
         {
+            // create a dummy list
+            List<player> tmpList = new List<player>();
+
+            // hard copy of plyrList
+            for (int i = 0; i < plyrList.Count() - waitingClients; i++)
+            {
+                var temp = playerList[i];
+                tmpList.Add(temp);
+            }
+
             // sort
-            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+            tmpList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
 
             List<String> winners = new List<String>();
 
             // if other players' scores are also max
-            for (int i = 0; i < plyrList.Count()- waitingClients; i++)
-                if (plyrList[i].score == plyrList[plyrList.Count()-1].score)
-                    winners.Add(plyrList[i].name);
+            for (int i = 0; i < tmpList.Count(); i++)
+                if (tmpList[i].score == tmpList[tmpList.Count()-1].score)
+                    winners.Add(tmpList[i].name);
 
             if (winners.Count() == 1)
                 return ("END OF THE GAME! THE WINNER IS: " + winners[0] + "!\n");
