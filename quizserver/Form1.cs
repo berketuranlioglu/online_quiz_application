@@ -16,7 +16,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 
 namespace quizserver
 {
@@ -37,6 +36,8 @@ namespace quizserver
         int noquestion;
         bool gameFinished = false;
         bool gameStarted = false;
+        bool canEnter = true;
+        int waitingClients = 0;
 
         static Barrier barrier = new Barrier(0, x => Console.WriteLine("Both threads have come to the end.\n"));
 
@@ -45,6 +46,7 @@ namespace quizserver
         {
             public Socket client_socket;
             public String client_name;
+            public int wait_message;
         }
 
 
@@ -126,6 +128,7 @@ namespace quizserver
             {
                 if (gameFinished == true)
                 {
+                    waitingClients = 0;
                     gameFinished = false;
                 }
 
@@ -156,6 +159,7 @@ namespace quizserver
 
                     //the client added to list, port and name is known
                     newClient.client_name = incomingName;
+                    newClient.wait_message = 0;
                     clientList.Add(newClient);
 
                     //if not a existing client, create new player
@@ -216,17 +220,23 @@ namespace quizserver
             {
                 try
                 {
-
-                    //if 2 player is joined
                     //ask questions
                     //check if everyone answered
                     //check answers
                     //announce winner
                     //list the score table
-
+                    if (canEnter == false && newClient.wait_message == 0)
+                    {
+                        Byte[] gamePlay = new Byte[64];
+                        gamePlay = Encoding.Default.GetBytes("There is an ongoing game! Please wait...\n");
+                        newClient.client_socket.Send(gamePlay);
+                        newClient.wait_message++;
+                        waitingClients++;
+                        barrier.RemoveParticipant();
+                    }
 
                     // Initial welcome to the players
-                    if (gameStarted)
+                    if (gameStarted & canEnter)
                     {
                         lock (locked)
                         {
@@ -238,6 +248,7 @@ namespace quizserver
                                 control_panel.AppendText("Server: Welcome to the game. We are starting...\n");
                             }
                         }
+                        canEnter = false;
 
                         //while # of questions are finished
                         for (int i = 0; i < noquestion; i++)
@@ -277,7 +288,7 @@ namespace quizserver
                                 // collect all the guesses
                                 List<Double> guesses = new List<Double>();
 
-                                for (int j = 0; j < playerList.Count(); j++)
+                                for (int j = 0; j < playerList.Count() - waitingClients; j++)
                                     guesses.Add(Math.Abs(answers[i % answers.Count()] - playerList[j].answers[i]));
 
 
@@ -342,16 +353,19 @@ namespace quizserver
                             barrier.SignalAndWait();
 
                             // Score table to see the results in general
-                            string table = scoreTable(playerList, removedPlayerList);
-                            if (newClient.client_name == playerList[0].name)
+                            lock (locked)
                             {
-                                control_panel.AppendText(table);
-                            }
+                                string table = scoreTable(playerList, removedPlayerList);
+                                if (newClient.client_name == playerList[0].name)
+                                {
+                                    control_panel.AppendText(table);
+                                }
 
-                            // Sending the table to the players
-                            Byte[] tableBuffer = new Byte[64];
-                            tableBuffer = Encoding.Default.GetBytes("\n" + table);
-                            newClient.client_socket.Send(tableBuffer);
+                                // Sending the table to the players
+                                Byte[] tableBuffer = new Byte[64];
+                                tableBuffer = Encoding.Default.GetBytes("\n" + table);
+                                newClient.client_socket.Send(tableBuffer);
+                            }
                             barrier.SignalAndWait();
 
                         }
@@ -385,7 +399,7 @@ namespace quizserver
                                 }
                             }
                             gameFinished = true;
-
+                            canEnter = true;
                             gameStarted = false;
                             button_start_game.Enabled = true;
                         }
@@ -525,15 +539,25 @@ namespace quizserver
 
         private string theWinner(List<player> plyrList)
         {
+            // create a dummy list
+            List<player> tmpList = new List<player>();
+
+            // hard copy of plyrList
+            for (int i = 0; i < plyrList.Count() - waitingClients; i++)
+            {
+                var temp = playerList[i];
+                tmpList.Add(temp);
+            }
+
             // sort
-            plyrList.Sort();
+            tmpList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
 
             List<String> winners = new List<String>();
 
             // if other players' scores are also max
-            for (int i = 0; i < plyrList.Count(); i++)
-                if (plyrList[i].score == plyrList[plyrList.Count() - 1].score)
-                    winners.Add(plyrList[i].name);
+            for (int i = 0; i < tmpList.Count(); i++)
+                if (tmpList[i].score == tmpList[tmpList.Count() - 1].score)
+                    winners.Add(tmpList[i].name);
 
             if (winners.Count() == 1)
                 return ("END OF THE GAME! THE WINNER IS: " + winners[0] + "!\n");
@@ -553,8 +577,10 @@ namespace quizserver
         {
             string currentTable = "\n-------------------------\nSTATUS TABLE:\n";
 
-            foreach (player plyr in plyrList)
-                currentTable += "Player " + plyr.name + "'s answer: " + plyr.answers[currentQuestion] + "\n";
+            for (int i = 0; i < plyrList.Count() - waitingClients; i++)
+            {
+                currentTable += "Player " + plyrList[i].name + "'s answer: " + plyrList[i].answers[currentQuestion] + "\n";
+            }
 
             currentTable += "The correct answer: " + correctAnswer + "\n"
                             + "The status for this question: " + status + "\n";
