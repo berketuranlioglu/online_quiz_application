@@ -451,6 +451,11 @@ namespace quizserver
                                 clientList.Remove(newClient);
                                 // decrement the barrier count
                                 barrier.RemoveParticipant();
+                                // finish and reset the game
+                                connected = false;
+                                gameFinished = true;
+                                gameStarted = false;
+                                button_start_game.Enabled = true;
                             }
                             else
                             {
@@ -480,14 +485,6 @@ namespace quizserver
                             }
                         }
                     }
-
-
-
-                    //connected = false;
-                    //gameFinished = true;
-
-                    //gameStarted = false;
-                    //button_start_game.Enabled = true;
                 }
             }
         }
