@@ -16,7 +16,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Reflection;
-
+using System.Security.Cryptography.X509Certificates;
 
 namespace quizserver
 {
@@ -53,20 +53,11 @@ namespace quizserver
             public String name;
             public List<double> answers;
             public double score;
-
-        }
-
-        struct serverAnswerItem
-        {
-            public player player1;
-            public player player2;
-
         }
 
         List<client> clientList = new List<client>(); //clients with socket and name
         List<player> playerList = new List<player>(); //users with name, answer and score
-
-        List<serverAnswerItem> serverAnswerList = new List<serverAnswerItem>(); //the list to keep the answers of users
+        List<String> removedPlayerList = new List<String>(); // disconnected players
 
         public Form1()
         {
@@ -74,8 +65,6 @@ namespace quizserver
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
             InitializeComponent();
         }
-
-
 
         private void button_listen_Click(object sender, EventArgs e)
         {
@@ -291,6 +280,7 @@ namespace quizserver
                                 for (int j = 0; j < playerList.Count(); j++)
                                     guesses.Add(Math.Abs(answers[i % answers.Count()] - playerList[j].answers[i]));
 
+
                                 String statusString = "";
                                 String status = "";
 
@@ -325,7 +315,7 @@ namespace quizserver
                                     winnerBuffer = Encoding.Default.GetBytes(status);
                                     newClient.client_socket.Send(winnerBuffer);
                                 }
-                                else // TODO: BOZUK
+                                else
                                 {
                                     statusString = "The point is shared among players!";
                                     status = currentStatus(playerList, statusString, answers[i % answers.Count()], i);
@@ -352,7 +342,7 @@ namespace quizserver
                             barrier.SignalAndWait();
 
                             // Score table to see the results in general
-                            string table = scoreTable(playerList);
+                            string table = scoreTable(playerList, removedPlayerList);
                             if (newClient.client_name == playerList[0].name)
                             {
                                 control_panel.AppendText(table);
@@ -403,8 +393,9 @@ namespace quizserver
                     }
 
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex);
                     if (!terminating)
                     {
                         string disconnectMessage = "Player " + newClient.client_name + " has disconnected\n";
@@ -440,18 +431,49 @@ namespace quizserver
                                     }
                                 }
 
+                                // disconnect that client
+                                newClient.client_socket.Close();
+                                // remove the disconnected player
                                 clientList.Remove(newClient);
+                                // decrement the barrier count
+                                barrier.RemoveParticipant();
+                            }
+                            else
+                            {
+                                // disconnect that client
+                                newClient.client_socket.Close();
+                                // remove the disconnected player
+                                clientList.Remove(newClient);
+                                // decrement the barrier count
+                                barrier.RemoveParticipant();
+
+                                // set its score to zero
+                                for (int i = 0; i < playerList.Count(); i++)
+                                {
+                                    if (playerList[i].name == newClient.client_name)
+                                    {
+                                        removedPlayerList.Add(playerList[i].name);
+                                        playerList.Remove(playerList[i]);
+                                        /*
+                                        var temp = playerList[i];
+                                        temp.score = 0;         // score will be zero
+                                        temp.isRemoved = true;  // set to true
+                                        playerList[i] = temp;
+                                        */
+                                    }
+                                }
+                                return;
                             }
                         }
                     }
 
 
 
-                    connected = false;
-                    gameFinished = true;
+                    //connected = false;
+                    //gameFinished = true;
 
-                    gameStarted = false;
-                    button_start_game.Enabled = true;
+                    //gameStarted = false;
+                    //button_start_game.Enabled = true;
                 }
             }
         }
@@ -460,7 +482,6 @@ namespace quizserver
         {
             if (playerList.Count >= 2)
             {
-                control_panel.AppendText("ok.\n");
                 gameStarted = true;
                 button_start_game.Enabled = false;
             }
@@ -470,32 +491,48 @@ namespace quizserver
             }
         }
 
-        private string scoreTable(List<player> plyrList)
+        private string scoreTable(List<player> plyrList, List<String> rmvdList)
         {
-            string table = "-------------------------\nSCORE TABLE:\n";
+            lock (locked)
+            {
+                string table = "-------------------------\nSCORE TABLE:\n";
 
-            // sort
-            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+                // create a dummy list
+                List<player> tmpList = new List<player>();
 
-            // print all players
-            for (int i = plyrList.Count()-1; i >= 0; i--)
-                table += (plyrList.Count()-i) + ". " + plyrList[i].name + ": " + plyrList[i].score + " points\n";
+                // hard copy of plyrList
+                for (int i = 0; i < plyrList.Count(); i++)
+                {
+                    var temp = plyrList[i];
+                    tmpList.Add(temp);
+                }
 
-            table += "-------------------------\n";
+                // sort newly created list
+                tmpList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
 
-            return table;
+                // print connected players first
+                for (int i = tmpList.Count() - 1; i >= 0; i--)
+                    table += (tmpList.Count() - i) + ". " + tmpList[i].name + ": " + tmpList[i].score + " points\n";
+                // print disconnected players later
+                for (int i = 0; i < rmvdList.Count(); i++)
+                    table += (tmpList.Count() + i + 1) + ". " + rmvdList[i] + ": 0 points\n";
+
+                table += "-------------------------\n";
+
+                return table;
+            }
         }
 
         private string theWinner(List<player> plyrList)
         {
             // sort
-            plyrList.Sort((s1, s2) => s1.score.CompareTo(s2.score));
+            plyrList.Sort();
 
             List<String> winners = new List<String>();
 
             // if other players' scores are also max
             for (int i = 0; i < plyrList.Count(); i++)
-                if (plyrList[i].score == plyrList[plyrList.Count()-1].score)
+                if (plyrList[i].score == plyrList[plyrList.Count() - 1].score)
                     winners.Add(plyrList[i].name);
 
             if (winners.Count() == 1)
