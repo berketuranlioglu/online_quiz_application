@@ -266,6 +266,10 @@ namespace quizserver
                             // Receiving the answers
                             Byte[] aBuffer = new Byte[64];
                             newClient.client_socket.Receive(aBuffer);
+                            if (playerList.Count() - waitingClients == 1)
+                            {
+                                break;
+                            }
                             String incomingAnswer = Encoding.Default.GetString(aBuffer);
                             incomingAnswer = incomingAnswer.Substring(0, incomingAnswer.IndexOf('\0'));
                             double playerAnswer = ConvertToDouble(incomingAnswer);
@@ -419,24 +423,24 @@ namespace quizserver
                     Console.WriteLine(ex);
                     if (!terminating)
                     {
-                        string disconnectMessage = "Player " + newClient.client_name + " has disconnected\n";
+                        string disconnectMessage = "Player " + newClient.client_name + " has disconnected.";
                         control_panel.AppendText(disconnectMessage);
 
                         lock (locked)
                         {
                             // if it will be the first disconnection
-                            if (clientList.Count == 2)
+                            if (clientList.Count() - waitingClients == 2)
                             {
                                 // finding the other (not disconnected) client
                                 client otherClient = clientList[0].client_name != newClient.client_name
                                     ? clientList[0] : clientList[1];
                                 Byte[] victoryBuffer = new Byte[64];
-                                disconnectMessage += "YOU ARE THE WINNER!\n";
+                                disconnectMessage += " *The game is terminating since you are the only player*\nYOU'RE THE WINNER!\n";
                                 victoryBuffer = Encoding.Default.GetBytes(disconnectMessage);
                                 otherClient.client_socket.Send(victoryBuffer);
-                                control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
+                                //control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
 
-                                for (int i = clientList.Count - 1; i >= 0; i--)
+                                for (int i = clientList.Count() - 1; i >= 0; i--)
                                 {
                                     // removing also from playerList
                                     if (playerList[i].name == newClient.client_name)
@@ -459,10 +463,19 @@ namespace quizserver
                                 // decrement the barrier count
                                 barrier.RemoveParticipant();
                                 // finish and reset the game
-                                connected = false;
+                                //connected = false;
                                 gameFinished = true;
                                 gameStarted = false;
+                                canEnter = true;
                                 button_start_game.Enabled = true;
+                                for (int j = 0; j < clientList.Count; j++)
+                                {
+                                    var temp2 = clientList[j];
+                                    temp2.wait_message = 0;
+                                    clientList[j] = temp2;
+                                }
+
+                                return;
                             }
                             else
                             {
@@ -483,7 +496,6 @@ namespace quizserver
                                         /*
                                         var temp = playerList[i];
                                         temp.score = 0;         // score will be zero
-                                        temp.isRemoved = true;  // set to true
                                         playerList[i] = temp;
                                         */
                                     }
@@ -498,19 +510,22 @@ namespace quizserver
 
         private void button_start_game_Click(object sender, EventArgs e)
         {
-            for(int i = 0; i< waitingClients; i++)
+            lock (locked)
             {
-                barrier.AddParticipant();
-            }
-            waitingClients = 0;
-            if (playerList.Count >= 2)
-            {
-                gameStarted = true;
-                button_start_game.Enabled = false;
-            }
-            else
-            {
-                control_panel.AppendText("There must be at least two players to start the game.\n");
+                for (int i = 0; i < waitingClients; i++)
+                {
+                    barrier.AddParticipant();
+                }
+                waitingClients = 0;
+                if (playerList.Count >= 2)
+                {
+                    gameStarted = true;
+                    button_start_game.Enabled = false;
+                }
+                else
+                {
+                    control_panel.AppendText("There must be at least two players to start the game.\n");
+                }
             }
         }
 
