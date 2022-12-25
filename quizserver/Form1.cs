@@ -521,6 +521,9 @@ namespace quizserver
                 {
                     gameStarted = true;
                     button_start_game.Enabled = false;
+                    //take the number of questions again for new game
+                    noquestion = Int32.Parse(textbox_noquestion.Text); //number of questions
+                    //textbox_noquestion.Enabled = false;
                 }
                 else
                 {
