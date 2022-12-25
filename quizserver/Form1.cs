@@ -337,9 +337,11 @@ namespace quizserver
 
                                     if (newClient.client_name == playerList[0].name)
                                     {
+                                        double denominator = closestPlayers.Count();
+                                        double point = 1 / denominator;
                                         for (int j = 0; j < closestPlayers.Count(); j++)
                                         {
-                                            double newScore = playerList[closestPlayers[j]].score + 0.5;
+                                            double newScore = playerList[closestPlayers[j]].score + point;
                                             var temp = playerList[closestPlayers[j]];
                                             temp.score = newScore;
                                             playerList[closestPlayers[j]] = temp;
@@ -553,7 +555,7 @@ namespace quizserver
 
                 // print connected players first
                 for (int i = tmpList.Count() - 1; i >= 0; i--)
-                    table += (tmpList.Count() - i) + ". " + tmpList[i].name + ": " + tmpList[i].score + " points\n";
+                    table += (tmpList.Count() - i) + ". " + tmpList[i].name + ": " + tmpList[i].score.ToString("0.##") + " points\n";
                 // print disconnected players later
                 for (int i = 0; i < rmvdList.Count(); i++)
                     table += (tmpList.Count() + i + 1) + ". " + rmvdList[i] + ": 0 points\n";
