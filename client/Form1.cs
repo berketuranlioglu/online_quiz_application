@@ -108,10 +108,19 @@ namespace client
                             textBox_answer.Enabled = true;
                             button_send.Enabled = true;
                         }
+                        else if (incomingMessage.Contains('*'))
+                        {
+                            textBox_answer.Enabled = false;
+                            button_send.Enabled = false;
+                            string disconnectMessage = "1";
+                            Byte[] disconnectBuffer = Encoding.Default.GetBytes(disconnectMessage);
+                            clientSocket.Send(disconnectBuffer);
+                        }
                     }
                     else
                     {
                         clientSocket.Close();
+                        connected = false;
                     }
                 }
                 catch
