@@ -83,11 +83,31 @@ namespace client
         {
             if (connected)
             {
-                Byte[] buffer = new Byte[64];
-                clientSocket.Receive(buffer);
-                string incomingMessage = Encoding.Default.GetString(buffer);
-                incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf('\0'));
-                logs.AppendText(incomingMessage);
+                try
+                {
+                    Byte[] buffer = new Byte[128];
+                    clientSocket.Receive(buffer);
+                    string incomingMessage = Encoding.Default.GetString(buffer);
+                    incomingMessage = incomingMessage.Substring(0, incomingMessage.IndexOf('\0'));
+                    logs.AppendText("Server: " + incomingMessage);
+                }
+                catch
+                {
+                    if (!terminating)
+                    {
+                        logs.AppendText("The server has disconnected\n");
+                        textBox_ip.Enabled = true;
+                        textBox_port.Enabled = true;
+                        textBox_name.Enabled = true;
+                        textBox_answer.Enabled = false;
+                        button_connect.Enabled = true;
+                        button_disconnect.Enabled = false;
+                        button_send.Enabled = false;
+                    }
+
+                    clientSocket.Close();
+                    connected = false;
+                }
             }
             while (connected)
             {
@@ -119,12 +139,12 @@ namespace client
                     }
                     else
                     {
-                        clientSocket.Close();
-                        connected = false;
+                        throw new Exception("This client socket is closed.");
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex);
                     if (!terminating)
                     {
                         logs.AppendText("The server has disconnected\n");

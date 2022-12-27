@@ -225,6 +225,15 @@ namespace quizserver
                     //check answers
                     //announce winner
                     //list the score table
+
+                    // before starting the game
+                    // check if there are any disconnected players
+                    // such as 2 players -> 1 player (game cannot start with 1 player)
+                    if (!SocketConnected(newClient.client_socket))
+                    {
+                        throw new Exception("This client socket is closed.");
+                    }
+
                     if (canEnter == false && newClient.wait_message == 0)
                     {
                         Byte[] gamePlay = new Byte[64];
@@ -260,6 +269,7 @@ namespace quizserver
                             newClient.client_socket.Send(qBuffer);
                             if (newClient.client_name == playerList[0].name)
                             {
+                                removedPlayerList.Clear();
                                 control_panel.AppendText("Server: " + questions[i % questions.Count()] + "\n");
                             }
 
@@ -425,7 +435,7 @@ namespace quizserver
                     Console.WriteLine(ex);
                     if (!terminating)
                     {
-                        string disconnectMessage = "Player " + newClient.client_name + " has disconnected.";
+                        string disconnectMessage = "Player " + newClient.client_name + " has disconnected.\n";
                         control_panel.AppendText(disconnectMessage);
 
                         lock (locked)
@@ -437,7 +447,13 @@ namespace quizserver
                                 client otherClient = clientList[0].client_name != newClient.client_name
                                     ? clientList[0] : clientList[1];
                                 Byte[] victoryBuffer = new Byte[64];
-                                disconnectMessage += " *The game is terminating since you are the only player*\nYOU'RE THE WINNER!\n";
+
+                                // if the game has started, other player must be the winner
+                                if (gameStarted)
+                                    disconnectMessage += " *The game is terminating since you are the only player*\nYOU'RE THE WINNER!\n";
+                                else // no winner info, just telling that he is the only player now
+                                    disconnectMessage += "You are the only player now. Please wait until new players arrive.\n";
+
                                 victoryBuffer = Encoding.Default.GetBytes(disconnectMessage);
                                 otherClient.client_socket.Send(victoryBuffer);
                                 //control_panel.AppendText("END OF THE GAME! THE WINNER IS: " + otherClient.client_name + "!\n");
@@ -510,6 +526,16 @@ namespace quizserver
             }
         }
 
+        bool SocketConnected(Socket s)
+        {
+            bool part1 = s.Poll(1000, SelectMode.SelectRead);
+            bool part2 = (s.Available == 0);
+            if (part1 && part2)
+                return false;
+            else
+                return true;
+        }
+
         private void button_start_game_Click(object sender, EventArgs e)
         {
             lock (locked)
@@ -558,7 +584,7 @@ namespace quizserver
                     table += (tmpList.Count() - i) + ". " + tmpList[i].name + ": " + tmpList[i].score.ToString("0.##") + " points\n";
                 // print disconnected players later
                 for (int i = 0; i < rmvdList.Count(); i++)
-                    table += (tmpList.Count() + i + 1) + ". " + rmvdList[i] + ": 0 points\n";
+                    table += (tmpList.Count() + i + 1) + ". " + rmvdList[i] + " (disconnected) : 0 points\n";
 
                 table += "-------------------------\n";
 
